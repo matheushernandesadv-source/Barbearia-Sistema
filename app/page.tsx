@@ -1,6 +1,6 @@
 import { Nav } from "@/components/site/Nav";
 import { Button } from "@/components/ui/Button";
-import { plans } from "@/lib/mock-data";
+import { getPlans } from "@/lib/data";
 import { formatBRL } from "@/lib/utils";
 import {
   CalendarCheck2, Users, Wallet, Percent, Boxes, ShoppingCart, Repeat,
@@ -81,7 +81,10 @@ const differentiators = [
   { icon: Building2, title: "Múltiplas unidades", desc: "Painel para acompanhar indicadores de cada unidade separadamente." },
 ];
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const plans = await getPlans();
   return (
     <>
       <Nav />

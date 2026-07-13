@@ -1,13 +1,13 @@
-"use client";
-
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { barbers, teamSchedule } from "@/lib/mock-data";
+import { getBarbers, getTeamSchedule } from "@/lib/data";
 import { formatBRL } from "@/lib/utils";
 import { Star, Clock3, Award } from "lucide-react";
 
-const days: { key: keyof (typeof teamSchedule)[0]; label: string }[] = [
+type ScheduleRow = Awaited<ReturnType<typeof getTeamSchedule>>[number];
+
+const days: { key: keyof Omit<ScheduleRow, "barberId">; label: string }[] = [
   { key: "mon", label: "Seg" },
   { key: "tue", label: "Ter" },
   { key: "wed", label: "Qua" },
@@ -17,7 +17,10 @@ const days: { key: keyof (typeof teamSchedule)[0]; label: string }[] = [
   { key: "sun", label: "Dom" },
 ];
 
-export default function EquipePage() {
+export const dynamic = "force-dynamic";
+
+export default async function EquipePage() {
+  const [barbers, teamSchedule] = await Promise.all([getBarbers(), getTeamSchedule()]);
   return (
     <>
       <Topbar title="Equipe" subtitle="Escala, metas, ranking e controle de ponto" />

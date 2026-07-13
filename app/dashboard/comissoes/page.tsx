@@ -1,13 +1,14 @@
-"use client";
-
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { barbers, commissions } from "@/lib/mock-data";
+import { getBarbers, getCommissions } from "@/lib/data";
 import { formatBRL } from "@/lib/utils";
 
-export default function ComissoesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ComissoesPage() {
+  const [barbers, commissions] = await Promise.all([getBarbers(), getCommissions()]);
   const totalGeral = commissions.reduce((s, c) => s + c.total, 0);
 
   return (

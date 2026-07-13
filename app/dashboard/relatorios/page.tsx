@@ -1,20 +1,26 @@
-"use client";
-
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
-import { revenueByBarber, topServices, busyHours, barbers, clients } from "@/lib/mock-data";
+import { RevenueByBarberChart, TopServicesPieChart, BusyHoursLineChart } from "@/components/dashboard/ReportsCharts";
+import { getRevenueByBarber, getTopServices, getBusyHours, getBarbers, getClients } from "@/lib/data";
 import { formatBRL } from "@/lib/utils";
-import {
-  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-  ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
-} from "recharts";
 
-const pieColors = ["#d1a838", "#7dd3fc", "#86efac", "#f9a8d4", "#c9ced6"];
+export const dynamic = "force-dynamic";
 
-export default function RelatoriosPage() {
+export default async function RelatoriosPage() {
+  const [revenueByBarber, topServices, busyHours, barbers, clients] = await Promise.all([
+    getRevenueByBarber(),
+    getTopServices(),
+    getBusyHours(),
+    getBarbers(),
+    getClients(),
+  ]);
+
   const inactiveClients = clients.filter((c) => c.status === "inativo");
-  const newClientsMonth = 14;
-  const returningClients = 62;
+  const activeClients = clients.filter((c) => c.status === "ativo");
+  const totalVisits = clients.reduce((s, c) => s + c.visits, 0);
+  const totalSpent = clients.reduce((s, c) => s + c.totalSpent, 0);
+  const ticketMedio = totalVisits > 0 ? totalSpent / totalVisits : 0;
+  const returningClients = clients.length > 0 ? Math.round((clients.filter((c) => c.visits > 1).length / clients.length) * 100) : 0;
 
   return (
     <>
@@ -25,13 +31,13 @@ export default function RelatoriosPage() {
           <Card>
             <CardBody>
               <p className="text-xs text-ink-400">Ticket médio</p>
-              <p className="font-display text-2xl text-ink-50 mt-1">{formatBRL(78)}</p>
+              <p className="font-display text-2xl text-ink-50 mt-1">{formatBRL(ticketMedio)}</p>
             </CardBody>
           </Card>
           <Card>
             <CardBody>
-              <p className="text-xs text-ink-400">Novos clientes (mês)</p>
-              <p className="font-display text-2xl text-ink-50 mt-1">{newClientsMonth}</p>
+              <p className="text-xs text-ink-400">Clientes ativos</p>
+              <p className="font-display text-2xl text-ink-50 mt-1">{activeClients.length}</p>
             </CardBody>
           </Card>
           <Card>
@@ -52,47 +58,29 @@ export default function RelatoriosPage() {
           <Card>
             <CardHeader title="Faturamento por barbeiro" subtitle="Ranking do mês" />
             <CardBody>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={revenueByBarber}>
-                  <CartesianGrid stroke="#22262e" vertical={false} />
-                  <XAxis dataKey="name" stroke="#9aa1ad" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} width={40} />
-                  <Tooltip contentStyle={{ background: "#111318", border: "1px solid #22262e", borderRadius: 12, fontSize: 12 }} />
-                  <Bar dataKey="faturamento" fill="#d1a838" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <RevenueByBarberChart data={revenueByBarber} />
             </CardBody>
           </Card>
 
           <Card>
             <CardHeader title="Serviços mais vendidos" subtitle="Mês atual" />
             <CardBody className="flex items-center">
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie data={topServices} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
-                    {topServices.map((_, i) => (
-                      <Cell key={i} fill={pieColors[i % pieColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "#111318", border: "1px solid #22262e", borderRadius: 12, fontSize: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 12, color: "#c9ced6" }} />
-                </PieChart>
-              </ResponsiveContainer>
+              {topServices.length > 0 ? (
+                <TopServicesPieChart data={topServices} />
+              ) : (
+                <p className="text-sm text-ink-500 italic py-10 text-center w-full">Sem vendas registradas ainda.</p>
+              )}
             </CardBody>
           </Card>
 
           <Card className="lg:col-span-2">
-            <CardHeader title="Horários mais movimentados" subtitle="Taxa de ocupação (%)" />
+            <CardHeader title="Horários mais movimentados" subtitle="Ocupação relativa (%)" />
             <CardBody>
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={busyHours}>
-                  <CartesianGrid stroke="#22262e" vertical={false} />
-                  <XAxis dataKey="hour" stroke="#9aa1ad" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} width={40} />
-                  <Tooltip contentStyle={{ background: "#111318", border: "1px solid #22262e", borderRadius: 12, fontSize: 12 }} />
-                  <Line type="monotone" dataKey="ocupacao" stroke="#d1a838" strokeWidth={2.5} dot={{ r: 3, fill: "#d1a838" }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {busyHours.length > 0 ? (
+                <BusyHoursLineChart data={busyHours} />
+              ) : (
+                <p className="text-sm text-ink-500 italic py-10 text-center">Sem dados suficientes ainda.</p>
+              )}
             </CardBody>
           </Card>
         </div>

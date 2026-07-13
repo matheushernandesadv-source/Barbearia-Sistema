@@ -1,12 +1,10 @@
-"use client";
-
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { cashFlow, receivables, payables } from "@/lib/mock-data";
+import { CashFlowBarChart } from "@/components/dashboard/CashFlowBarChart";
+import { getCashFlow, getReceivables, getPayables, getCommissions } from "@/lib/data";
 import { formatBRL, formatDatePt } from "@/lib/utils";
-import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { ArrowDownCircle, ArrowUpCircle, Target, FileBarChart } from "lucide-react";
 
 const statusTone: Record<string, "green" | "orange" | "red"> = {
@@ -15,9 +13,18 @@ const statusTone: Record<string, "green" | "orange" | "red"> = {
   atrasado: "red",
 };
 
-export default function FinanceiroPage() {
+export const dynamic = "force-dynamic";
+
+export default async function FinanceiroPage() {
+  const [cashFlow, receivables, payables, commissions] = await Promise.all([
+    getCashFlow(),
+    getReceivables(),
+    getPayables(),
+    getCommissions(),
+  ]);
   const totalEntradas = cashFlow.reduce((s, d) => s + d.entradas, 0);
   const totalSaidas = cashFlow.reduce((s, d) => s + d.saidas, 0);
+  const totalComissoes = commissions.reduce((s, c) => s + c.total, 0);
   const lucroLiquido = totalEntradas - totalSaidas;
 
   return (
@@ -67,16 +74,7 @@ export default function FinanceiroPage() {
         <Card>
           <CardHeader title="Fluxo de caixa diário" subtitle="Entradas x saídas · últimos 13 dias" />
           <CardBody>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={cashFlow}>
-                <CartesianGrid stroke="#22262e" vertical={false} />
-                <XAxis dataKey="day" stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} width={40} />
-                <Tooltip contentStyle={{ background: "#111318", border: "1px solid #22262e", borderRadius: 12, fontSize: 12 }} />
-                <Bar dataKey="entradas" fill="#d1a838" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="saidas" fill="#ef4444" radius={[4, 4, 0, 0]} opacity={0.7} />
-              </BarChart>
-            </ResponsiveContainer>
+            <CashFlowBarChart data={cashFlow} />
           </CardBody>
         </Card>
 
@@ -141,11 +139,11 @@ export default function FinanceiroPage() {
             </div>
             <div className="flex justify-between py-2 border-b border-ink-600/50">
               <span className="text-ink-300">(-) Comissões</span>
-              <span className="text-red-400">{formatBRL(11005)}</span>
+              <span className="text-red-400">{formatBRL(totalComissoes)}</span>
             </div>
             <div className="flex justify-between py-2 font-semibold">
               <span className="text-ink-50">Lucro líquido</span>
-              <span className="text-gold-300">{formatBRL(lucroLiquido - 11005)}</span>
+              <span className="text-gold-300">{formatBRL(lucroLiquido - totalComissoes)}</span>
             </div>
           </CardBody>
         </Card>
