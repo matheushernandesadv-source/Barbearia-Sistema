@@ -1,14 +1,15 @@
-"use client";
-
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { products } from "@/lib/mock-data";
+import { getProducts } from "@/lib/data";
 import { formatBRL, formatDatePt } from "@/lib/utils";
 import { AlertTriangle, PackagePlus, PackageMinus } from "lucide-react";
 
-export default function EstoquePage() {
+export const dynamic = "force-dynamic";
+
+export default async function EstoquePage() {
+  const products = await getProducts();
   const lowStock = products.filter((p) => p.stock <= p.min);
 
   return (

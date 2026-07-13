@@ -1,21 +1,15 @@
-"use client";
-
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { plans, clients } from "@/lib/mock-data";
+import { getPlans, getSubscriptions } from "@/lib/data";
 import { formatBRL } from "@/lib/utils";
 import { CheckCircle2 } from "lucide-react";
 
-const subscribers = [
-  { client: clients[0].name, plan: "Plano Completo", since: "12/01/2026", renews: "15/07/2026", status: "ativo" as const },
-  { client: clients[3].name, plan: "Plano Black", since: "03/03/2026", renews: "15/07/2026", status: "ativo" as const },
-  { client: clients[5].name, plan: "Plano Essencial", since: "20/11/2025", renews: "05/07/2026", status: "vencido" as const },
-  { client: clients[1].name, plan: "Plano Essencial", since: "08/05/2026", renews: "18/07/2026", status: "ativo" as const },
-];
+export const dynamic = "force-dynamic";
 
-export default function AssinaturasPage() {
+export default async function AssinaturasPage() {
+  const [plans, subscribers] = await Promise.all([getPlans(), getSubscriptions()]);
   const mrr = plans.reduce((s, p) => s + p.price * p.subscribers, 0);
 
   return (
